@@ -119,3 +119,4 @@ button, input, select, textarea {
 .budget-range-row input::placeholder{font-size:14px}
 .filter-panel .budget-range legend{font-size:14px}
 @media(max-width:640px){.filter-panel .budget-range{margin-top:16px}}
+.push-panel h3{display:flex;align-items:center;gap:.5rem}.push-panel{margin-bottom:1rem}.push-buttons{display:flex;gap:.75rem;flex-wrap:wrap}.push-buttons button{flex:1;min-width:10rem}.push-panel .muted,.push-panel .install-help{line-height:1.7}.push-panel a{text-decoration:underline}
