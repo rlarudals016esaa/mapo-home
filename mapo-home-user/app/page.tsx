@@ -10,6 +10,7 @@ import {toast} from "sonner";
 import {dongs,initial,matches,money,priceLabel,priceChange,favoriteStatus,ruleSchema,type Listing,type Rule,type State,type Notice} from "@/lib/model";
 import {ListingSourceLink} from "@/components/listing-source-link";
 import {PwaPanel} from "@/components/pwa-panel";
+import {PushPanel} from "@/components/push-panel";
 import {newestWithSimilarTogether,originalDateLabel} from "@/lib/listing-order";
 
 const defaults={dong:"전체",deal:"전체",type:"전체",minPrice:"",maxPrice:"",minRent:"",maxRent:"",minArea:""};
@@ -92,7 +93,7 @@ export default function Home(){
     <main className="shell"><div className="page-heading"><div><p className="eyebrow"><MapPin size={14}/> 서울 마포구</p><h1>내 예산에 맞는, 나의 첫 방</h1><p className="muted">마음에 드는 방은 하트로, 찾는 조건은 하나로.</p></div><button className="primary" disabled={!loaded} onClick={configure}><SlidersHorizontal size={17}/>{rule?"내 조건 수정":"내 조건 설정"}</button></div>
       <Tabs value={tab} onValueChange={setView}><TabsList className="main-tabs" variant="line"><TabsTrigger value="browse">방 둘러보기</TabsTrigger><TabsTrigger value="favorites">관심 매물 {s.favorites.length>0&&<span className="tab-count">{s.favorites.length}</span>}</TabsTrigger><TabsTrigger value="settings">내 조건</TabsTrigger><TabsTrigger value="inbox">알림함 {unread>0&&<span className="count">{unread}</span>}</TabsTrigger><TabsTrigger value="housing">청년·공공임대</TabsTrigger></TabsList></Tabs>
       {error&&<div className="error-box" role="alert">{error} <button onClick={load} className="text-link">다시 불러오기</button></div>}
-      <div className="notice"><Info size={16}/><p>{loaded?<><strong>{s.sourceDate} 수집 기준</strong> · {active.length.toLocaleString()}개 매물</>:"매물 정보를 불러오는 중이에요."}</p><span>기기 푸시 준비 중</span></div>
+      <div className="notice"><Info size={16}/><p>{loaded?<><strong>{s.sourceDate} 수집 기준</strong> · {active.length.toLocaleString()}개 매물</>:"매물 정보를 불러오는 중이에요."}</p><button className="text-link" onClick={()=>setView("settings")}>기기 알림 설정</button></div>
       {!loaded?<Empty title={error?"잠시 연결이 어려워요":"매물을 불러오고 있어요"} body={error?"위의 다시 불러오기를 눌러 주세요.":"잠시만 기다려 주세요."}/>:
       tab==="browse"?<>
         <button className="secondary mobile-filter-button" aria-expanded={filterOpen} onClick={()=>setFilterOpen(v=>!v)}><SlidersHorizontal size={17}/>검색 필터 {filterOpen?"접기":"열기"}</button>
@@ -137,7 +138,7 @@ export default function Home(){
       </section><aside className="settings-aside">
         {rule&&<section className="section-panel"><div className="results-heading"><h3>저장된 알림 설정</h3><Switch aria-label="전체 알림 활성화" checked={rule.enabled} disabled={busy} onCheckedChange={enabled=>mutate("toggle",{enabled})}/></div><p>{rule.deal} · 보증금 {rule.minPrice!=null&&<>{money(rule.minPrice)}원 이상 · </>}{money(rule.maxPrice)}원 이하{rule.deal==="월세"&&<> · 월세 {rule.minRent!=null&&<>{money(rule.minRent)}원 이상 · </>}{money(rule.maxRent??0)}원 이하</>}</p><p className="muted">{rule.dongs.join(", ")||"마포구 전체"}{rule.minArea!==null&&" · 전용 "+rule.minArea+"㎡ 이상"}</p><p className="muted">{rule.enabled?"조건 일치 시 알림 대상":"전체 알림이 일시 중지되어 있어요."}</p><button className="secondary full" onClick={()=>{setFilter(defaults);setQuery("");setView("browse");setOnlyMatches(true)}}>현재 일치하는 방 {matched.length}개 보기</button></section>}
         <section className="section-panel"><h3>이렇게 알려드려요</h3><div className="push-preview"><div className="inline"><Building2 size={18}/><b>마포홈</b><small>발송 문구 미리보기</small></div><strong>{nickname.trim()?"새로운 방이 "+nickname.trim()+"님을 기다립니다!":"새로운 방이 기다립니다!"}</strong><p>{draftMatches[0]?draftMatches[0].type+" · "+priceLabel(draftMatches[0])+" · 조건에 맞는 방 "+draftMatches.length+"개":"가격 조건을 입력하면 일치하는 매물로 예시를 보여드려요."}</p></div><ul className="plain-list"><li>새로운 방은 한 번에 모아서</li><li>관심 매물 가격 변화는 방마다 따로</li><li>조건을 벗어나면 잠시 중지, 다시 맞으면 한 번 안내</li></ul></section>
-        <PwaPanel/>
+        <PushPanel signedIn={signedIn} hasRule={!!rule} ruleEnabled={!!rule?.enabled}/><PwaPanel/>
       </aside></div>):<section className="section-panel"><div className="results-heading"><div><h2>나의 알림함</h2><p className="muted">새로운 방은 모아서, 관심 매물의 변화는 개별로 확인해요.</p></div><button className="secondary" disabled={!unread||busy} onClick={()=>mutate("read")}><Check size={16}/>모두 읽음</button></div>
         {!signedIn?loginBlock:!s.notices.length?<Empty title="아직 도착한 알림이 없어요" body="다음 수집 데이터가 연결되면 내 조건에 맞는 새로운 방과 관심 매물의 변화를 확인할 수 있어요."/>:s.notices.map(n=><article className={"notification "+(!n.read?"unread":"")} key={n.id}><div className="notification-icon"><Bell/></div><div><span className="type-tag">{n.kind}</span><h3>{n.title}</h3><p>{n.body}</p><small>{date(n.at)}</small></div><button className="text-link" onClick={()=>viewNotice(n)}>{n.kind==="신규 매물"?"새로운 방 보기":"매물 보기"}</button></article>)}
       </section>}
