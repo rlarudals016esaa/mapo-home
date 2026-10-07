@@ -12,7 +12,7 @@ self.addEventListener("fetch", event => {
   if (["/signin-with-chatgpt", "/signout-with-chatgpt", "/callback"].includes(url.pathname)) return;
   event.respondWith(fetch(event.request).catch(async () => (await caches.match("/offline.html")) || Response.error()));
 });
-// Receiver contract for future authenticated push delivery. No push is simulated locally.
+// The payload is encrypted for this subscription by the authenticated server.
 self.addEventListener("push", event => {
   let data; try { data = event.data?.json(); } catch { return; }
   if (!data || typeof data.title !== "string" || typeof data.body !== "string") return;
