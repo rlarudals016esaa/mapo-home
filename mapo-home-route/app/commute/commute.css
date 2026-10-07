@@ -66,3 +66,54 @@
  .commute-other-copy>strong{font-size:15px}
  .commute-other-copy>span{font-size:14px}
 }
+
+/* Keep the route summary beside the selected homes, directly below the destination. */
+.commute-sidebar{min-width:0;display:grid;gap:14px;align-content:start}
+.commute-sidebar .commute-setup{position:static}
+.commute-sidebar .commute-results{margin-top:0;min-width:0;padding:24px}
+.commute-results>.commute-section-title{flex-wrap:wrap;gap:4px 10px;margin-bottom:8px}
+.commute-results>.commute-section-title>small{font-size:11px}
+.commute-filter-disclosure{margin-bottom:14px;color:#627487;font-size:12px}
+.commute-filter-disclosure>summary{cursor:pointer;line-height:1.7;padding:5px 0}
+.commute-filter-disclosure .commute-filters{gap:12px;padding-bottom:14px}
+.commute-filter-disclosure .commute-segments{flex-wrap:wrap;width:100%}
+.commute-filter-disclosure .commute-segments button{font-size:12px;padding:8px 6px;flex:1;white-space:nowrap}
+.commute-result-summary[hidden]{display:none}
+.commute-results .commute-result-card{border:0;box-shadow:none;border-radius:0;padding:0;max-width:none;margin:0}
+.commute-results .commute-result-card+.commute-result-card{border-top:1px solid #dce4e7;padding-top:20px}
+.commute-result-property{border:0;padding:0;margin:0 0 10px}
+.commute-result-property h3{font-size:15px;color:#627487}
+.commute-result-top{margin-bottom:6px}
+.commute-compact-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;background:#edf5f2;border-radius:9px;padding:14px 16px}
+.commute-compact-summary:focus-visible{outline:2px solid #176e62;outline-offset:3px}
+.commute-compact-summary>strong{font-size:32px;line-height:1.25;letter-spacing:-1px;color:#176e62;white-space:nowrap}
+.commute-compact-summary>strong>span{font-size:24px;letter-spacing:0}
+.commute-compact-summary>span{border-left:1px solid #dceae4;padding-left:14px;font-size:13px;line-height:1.6;color:#3f5d64}
+.commute-compact-route>p{font-size:15px;font-weight:700;line-height:1.6;margin:13px 0 7px;overflow-wrap:anywhere}
+.commute-compact-lines{display:grid;gap:6px}
+.commute-compact-lines>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:#526779;line-height:1.6}
+.commute-compact-line{border:1px solid #75a996;border-radius:5px;padding:2px 7px;color:#176e62;font-weight:600;overflow-wrap:anywhere;max-width:100%}
+.commute-compact-route>small{display:block;font-size:12px;line-height:1.6;color:#637688;margin-top:6px}
+.commute-detail-disclosure{border-top:1px solid #dce4e7;margin-top:16px}
+.commute-detail-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;padding:14px 0 0;cursor:pointer;font-size:14px;font-weight:600;color:#526779}
+.commute-detail-disclosure>summary::-webkit-details-marker{display:none}
+.commute-detail-disclosure>summary>svg{flex-shrink:0;transition:transform .15s}
+.commute-detail-disclosure[open]>summary>svg{transform:rotate(180deg)}
+.commute-detail-disclosure .commute-timeline{margin:22px 0 24px}
+.commute-detail-disclosure .commute-timeline>li{grid-template-columns:30px minmax(0,1fr) auto;gap:10px;min-height:74px;padding-bottom:20px}
+.commute-detail-disclosure .commute-timeline>li:last-child{min-height:0;padding-bottom:0}
+.commute-detail-disclosure .commute-timeline>li:not(:last-child)::before{left:14px;top:29px;width:2px}
+.commute-detail-disclosure .commute-timeline-icon{width:30px;height:30px}
+.commute-detail-disclosure .commute-timeline-copy>strong{font-size:14px}
+.commute-detail-disclosure .commute-timeline-copy>p,.commute-detail-disclosure .commute-timeline-time{font-size:12px}
+.commute-detail-disclosure .commute-line-badges{gap:5px;margin-top:8px}
+.commute-detail-disclosure .commute-line-badges>span{font-size:12px;padding:2px 6px}
+.commute-detail-disclosure .commute-other-routes h5{font-size:15px;margin-bottom:8px}
+.commute-detail-disclosure .commute-other-route{grid-template-columns:48px minmax(0,1fr) 16px;gap:10px;padding:14px 0}
+.commute-detail-disclosure .commute-other-time{font-size:12px}
+.commute-detail-disclosure .commute-other-time strong{font-size:22px}
+.commute-detail-disclosure .commute-other-copy>strong{font-size:13px}
+.commute-detail-disclosure .commute-other-copy>span{font-size:12px}
+.commute-detail-disclosure .commute-journey-note{font-size:11px;margin-top:16px}
+.commute-results>.commute-result-note{font-size:11px;margin-top:16px;line-height:1.6}
+@media(max-width:700px){.commute-sidebar .commute-results{padding:18px}.commute-compact-summary{padding:12px;gap:8px 10px}.commute-compact-summary>span{padding-left:10px}.commute-compact-summary>strong{font-size:30px}}
