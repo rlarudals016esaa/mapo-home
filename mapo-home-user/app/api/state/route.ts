@@ -1,3 +1,4 @@
+import {withListingImage} from '@/lib/listing-images';
 import {refreshCatalog,reconcileCatalog} from "@/lib/catalog";
 import {getChatGPTUser} from "@/app/chatgpt-auth";
 import {env} from "cloudflare:workers";
@@ -10,7 +11,7 @@ import {pushConfiguration} from "@/lib/push";
 const json=(v:unknown,status=200)=>Response.json(v,{status,headers:{"Cache-Control":"no-store"}});
 function db(){if(!env.DB)throw new Error("데이터 저장소가 연결되지 않았습니다.");return env.DB}
 async function read(id:string){return db().prepare("SELECT revision,payload FROM workspaces WHERE id=?").bind(id).first<{revision:number;payload:string}>()}
-const customerState=(s:State)=>{const {legacyRules,...visible}=s;return {...visible,runs:[]}};
+const customerState=(s:State)=>{const {legacyRules,...visible}=s;return {...visible,listings:visible.listings.map(withListingImage),runs:[]}};
 export async function GET(){try{
   const delivery={ready:pushConfiguration().ready,message:"내 조건에서 기기 알림을 켜면 운영자가 새 자료를 반영할 때 알려드려요."};
   const catalog=await refreshCatalog();const u=await getChatGPTUser();
