@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import {baseline} from "../lib/baseline";
+import {newestWithSimilarTogether,originalDate,originalDateLabel,similarityKey} from "../lib/listing-order";
+const base=baseline().listings[0];
+const room=(id:string,name:string,day:string,row:number)=>({...base,id,name,confirmedAt:day,sourceRow:row});
+const input=[room("a1","같은 방","등록 2026.10.05",2),room("other","다른 방","확인매물 2026.10.05",3),room("a2","같은 방","등록 2026.10.05",4),room("old","같은 방","등록 2026.10.04",5),room("new","새 방","확인매물 2026.10.06",6),room("missing","날짜 없음","",7),room("invalid","잘못된 날짜","등록 2026.02.30",8)];
+const output=newestWithSimilarTogether(input);
+assert.deepEqual(output.map(l=>l.id),["new","a1","a2","other","old","missing","invalid"]);
+assert.equal(input[0].id,"a1","Do not mutate source order");
+assert.equal(originalDate(input[6]),"");
+assert.equal(originalDateLabel(input[0]),"등록 2026-10-05");
+assert.equal(originalDateLabel(input[4]),"확인 2026-10-06");
+assert.equal(similarityKey({...base,name:"  마포　 원룸  "}),similarityKey({...base,name:"마포 원룸"}));
+assert.notEqual(similarityKey(base),similarityKey({...base,area:base.area+1}));
+const actual=baseline().listings;
+const sorted=newestWithSimilarTogether(actual);
+assert.equal(sorted.length,1003);
+assert.deepEqual(new Set(sorted.map(l=>l.id)),new Set(actual.map(l=>l.id)));
+for(let i=1;i<sorted.length;i++)assert(originalDate(sorted[i-1])>=originalDate(sorted[i]));
+const closed=new Set<string>();let last="";
+for(const l of sorted){const key=JSON.stringify([originalDate(l),similarityKey(l)]);if(key!==last){assert(!closed.has(key),"Similar group must remain contiguous");if(last)closed.add(last);last=key}}
+console.log("PASS latest dates, within-day adjacency, day priority, date labels, invalid dates last, normalization, no mutation, all 1,003 IDs retained");
+console.log(JSON.stringify(sorted.slice(0,6).map(l=>({row:l.sourceRow,name:l.name,price:l.priceText,date:l.confirmedAt})),null,2));
