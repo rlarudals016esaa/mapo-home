@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791255357310,
+      "tag": "0000_sharp_frightful_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791269026880,
+      "tag": "0001_charming_madrox",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791272773875,
+      "tag": "0002_outstanding_dreadnoughts",
+      "breakpoints": true
+    }
+  ]
+}
