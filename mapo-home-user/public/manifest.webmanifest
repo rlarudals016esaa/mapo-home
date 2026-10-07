@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "마포홈 · 나에게 맞는 자취방",
+  "short_name": "마포홈",
+  "description": "마포구 원룸·오피스텔 전세·월세와 관심 매물",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#176e62",
+  "icons": [
+    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+  ]
+}
