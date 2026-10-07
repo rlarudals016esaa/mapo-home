@@ -11,7 +11,7 @@ export default function UploadReview({result,fileName,selectedRows,onSelectionCh
   const ExcelJS=await import('exceljs');const book=new ExcelJS.Workbook();const sheet=book.addWorksheet('Sheet1');
   sheet.addRows(result.standardRows);sheet.views=[{state:'frozen',ySplit:1}];
   sheet.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}};sheet.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF102E3E'}};
-  sheet.columns.forEach((c,i)=>{c.width=[2,16,18,19,21,22].includes(i)?38:20});
+  sheet.columns.forEach((c,i)=>{c.width=[2,16,18,19,21,22,26].includes(i)?38:20});
   result.standardRows.slice(1).forEach((r,i)=>{if(r[20]!=='정상')sheet.getRow(i+2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFE6C9'}}});
   const data=await book.xlsx.writeBuffer();const url=URL.createObjectURL(new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
   const a=document.createElement('a');a.href=url;a.download=fileName.replace(/^(SINGLE|MAPO)_/i,'MAPO_').replace(/\.csv$/i,'.xlsx');a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
