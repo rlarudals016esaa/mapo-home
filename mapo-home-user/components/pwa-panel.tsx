@@ -19,6 +19,5 @@ export function PwaPanel(){
     {help&&<p className="install-help">iPhone은 Safari의 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요. 다른 기기는 브라우저 메뉴의 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 확인해 주세요.</p>}
     {installError&&<p role="alert" className="error-box">{installError}</p>}
     {offline&&<p role="status" className="error-box">현재 오프라인이에요. 저장하려면 인터넷에 연결해 주세요.</p>}
-    <div className="delivery-note"><strong>기기 푸시 준비 중</strong><p>내 조건과 관심 매물은 저장할 수 있어요. 매일 자동 갱신과 기기 푸시는 아직 연결되지 않았어요.</p></div>
   </section>;
 }
