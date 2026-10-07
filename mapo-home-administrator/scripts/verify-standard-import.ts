@@ -26,4 +26,13 @@ const unknown=legacy(true);unknown[header.indexOf('LABEL-6')]='월세 1,000/57�
 const range=legacy();range[header.indexOf('LABEL-5')]='월세 500/100 ~ 2,000/30';const ranged=inspectCollectedRows([header,range],file);assert.deepEqual(ranged.rows[0].priceOptions,[{price:500,rent:100},{price:2000,rent:30}]);assert.deepEqual(parseCollectedRows(ranged.standardRows,standardFile).rows,ranged.rows);
 assert(inspectCollectedRows(edit('검토상태','금액 확인 필요'),standardFile).issues.length,'review marker cannot be silently ignored');
 const noLink=legacy();noLink[header.indexOf('HREF-2')]='';const untracked=inspectCollectedRows([header,noLink],file);assert.equal(untracked.rows[0].id,'snapshot:2026-10-07:2');assert.deepEqual(parseCollectedRows(untracked.standardRows,standardFile).rows,untracked.rows);
+const image='https://landthumb-phinf.pstatic.net/20261007/test.JPG?type=CW86_H86';
+const withImage=legacy();withImage[header.indexOf('LABEL-2')]=image;
+const imageResult=inspectCollectedRows([header,withImage],file);assert.equal(imageResult.standardRows[1][26],image);assert.equal(inspectCollectedRows(imageResult.standardRows,standardFile).standardRows[1][26],image);
+assert.equal(imageResult.rows[0].imageUrl,image,'image URL survives operation-list parsing');assert.equal(parseCollectedRows(imageResult.standardRows,standardFile).rows[0].imageUrl,image,'standard re-upload retains image URL');
+assert(inspectCollectedRows(edit('이미지URL','javascript:alert(1)'),standardFile).issues.length,'unsafe image URL is rejected');
+assert.equal(inspectCollectedRows(a.standardRows.map(r=>r.slice(0,26)),standardFile).standardRows[1][26],'','old standard files remain compatible without images');
+assert.equal(inspectCollectedRows([header,legacy()],file).standardRows[1][26],'','missing image stays blank');
+const invalidImageRow=[...unknown];invalidImageRow[header.indexOf('LABEL-2')]=image;assert.equal(inspectCollectedRows([header,invalidImageRow],file).standardRows[1][26],image,'error rows retain image provenance');
+assert.throws(()=>inspectCollectedRows([[...imageResult.standardRows[0],'이미지URL'],imageResult.standardRows[1]],standardFile),/중복/);
 console.log('Standard import: legacy/current layouts, roundtrip, reordered headers, missing vs zero, identity, timestamps, version, duplicates, unknown amount, paired ranges, review state, untracked ID passed.');

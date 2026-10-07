@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {dongs,listingSchema} from './model';
 import {collectedAt} from './quality';
 export const STANDARD_VERSION='MAPO-1';
-export const STANDARD_HEADERS=['형식버전','매물ID','매물명','자치구','동','유형','거래종류','보증금(만원)','월세(만원)','보증금2(만원)','월세2(만원)','전용면적(㎡)','층','방향','관리비','역거리','설명','확인등록일','원문URL','가격원문','검토상태','검토메모','원본파일','원본시트','원본행','수집시각'] as const;
+export const STANDARD_HEADERS=['형식버전','매물ID','매물명','자치구','동','유형','거래종류','보증금(만원)','월세(만원)','보증금2(만원)','월세2(만원)','전용면적(㎡)','층','방향','관리비','역거리','설명','확인등록일','원문URL','가격원문','검토상태','검토메모','원본파일','원본시트','원본행','수집시각','이미지URL'] as const;
 type Field=typeof STANDARD_HEADERS[number];
 type Cell=string|number|null;
 type RecordRow=Record<Field,Cell>;
@@ -26,6 +26,7 @@ function inferLegacy(cells:string[],header:string[],file:string,rowNumber:number
  const labels=Array.from({length:lastLabel},(_,i)=>cells[header.indexOf('LABEL-'+(i+1))]??'');
  const candidates=labels.map((v,i)=>({v,i})).filter(({v,i})=>['원룸','오피스텔'].includes(v)&&i>=2&&/^(전세|월세)\s/.test(labels[i-1])&&labels[i-2]);
  Object.assign(record,{'형식버전':STANDARD_VERSION,'자치구':'마포구','원본파일':file,'원본시트':/\.csv$/i.test(file)?'CSV':'Sheet1','원본행':rowNumber,'수집시각':collectedAt(file),'검토상태':'정상'});
+ record['이미지URL']=labels.find(v=>/^https:\/\/landthumb-phinf\.pstatic\.net\//i.test(v))??'';
  if(candidates.length!==1){issues.push(issue(rowNumber,record,'매물명','매물명·가격·유형 조합을 하나로 확인할 수 없습니다.'));record['검토상태']='확인 필요';return {record,issues}}
  const typeIndex=candidates[0].i;
  record['매물명']=labels[typeIndex-2];record['유형']=labels[typeIndex];record['거래종류']=labels[typeIndex-1].slice(0,2);record['가격원문']=labels[typeIndex-1];
@@ -67,15 +68,15 @@ function toListing(r:RecordRow,file:string):ImportedListing{
  let priceText=deal+' '+priceOptions.map(p=>String(p.price)+(deal==='월세'?'/'+p.rent:'')).join(' ~ ');
  const sourcePriceText=txt(r['가격원문']);
  try{if(JSON.stringify(prices(sourcePriceText,deal))===JSON.stringify(priceOptions))priceText=sourcePriceText.replace(/변동.*$/,'').trim()}catch{/* Keep raw text as provenance; numeric standard columns are authoritative. */}
- return listingSchema.parse({id,district:txt(r['자치구']),dong:txt(r['동']),name:txt(r['매물명']),type:txt(r['유형']),deal,price,rent,priceOptions,priceText,sourcePriceText,area:requiredNumber('전용면적(㎡)',10000,true),floor:txt(r['층'])||'층 정보 없음',direction:txt(r['방향'])||undefined,management:txt(r['관리비'])||undefined,walk:txt(r['역거리'])||undefined,description:txt(r['설명'])||undefined,confirmedAt:txt(r['확인등록일'])||undefined,trackable:!!article||id.startsWith('test:'),sourceUrl:url||undefined,sourceFile,sourceSheet:txt(r['원본시트'])||'Sheet1',sourceRow,sourceCollectedAt:time,sourceDate});
+ return listingSchema.parse({id,district:txt(r['자치구']),dong:txt(r['동']),name:txt(r['매물명']),type:txt(r['유형']),deal,price,rent,priceOptions,priceText,sourcePriceText,area:requiredNumber('전용면적(㎡)',10000,true),floor:txt(r['층'])||'층 정보 없음',direction:txt(r['방향'])||undefined,management:txt(r['관리비'])||undefined,walk:txt(r['역거리'])||undefined,description:txt(r['설명'])||undefined,confirmedAt:txt(r['확인등록일'])||undefined,trackable:!!article||id.startsWith('test:'),sourceUrl:url||undefined,imageUrl:txt(r['이미지URL'])||undefined,sourceFile,sourceSheet:txt(r['원본시트'])||'Sheet1',sourceRow,sourceCollectedAt:time,sourceDate});
 }
 export function inspectCollectedRows(input:unknown[][],file:string):ImportResult{
  const time=collectedAt(file),sourceDate=sourceDay(time),header=(input[0]??[]).map(txt);
  const standard=header.includes('형식버전');
  const legacy=header.filter(h=>/^(LABEL|HREF)-[1-9]\d*$/.test(h)||['TEST-ID','TEST-DONG'].includes(h));
  if(!standard&&(legacy.filter(h=>h.startsWith('LABEL-')).length<3||legacy.some(h=>Number(h.split('-')[1])>2000)))throw new Error('Listly의 LABEL 열 또는 표준 MAPO-1 열을 찾을 수 없습니다. Listly에서 받은 원본 파일을 선택해 주세요.');
- const required=standard?[...STANDARD_HEADERS]:[...new Set(legacy)];
- const missing=required.filter(h=>!header.includes(h)),duplicates=required.filter(h=>header.filter(v=>v===h).length>1);
+ const required=standard?STANDARD_HEADERS.filter(h=>h!=='이미지URL'):[...new Set(legacy)];
+ const missing=required.filter(h=>!header.includes(h)),duplicates=(standard?[...STANDARD_HEADERS]:required).filter(h=>header.filter(v=>v===h).length>1);
  if(missing.length||duplicates.length)throw new Error('열 구성을 확인하세요. '+(missing.length?'누락: '+missing.join(', '):'')+(duplicates.length?' 중복: '+duplicates.join(', '):''));
  if(input.length<2||input.length>2001)throw new Error('매물은 1~2,000행이어야 합니다.');
  const rows:ImportedListing[]=[],standardRows:Cell[][]=[[...STANDARD_HEADERS]],issues:ImportIssue[]=[];
