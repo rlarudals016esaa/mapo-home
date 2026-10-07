@@ -1,0 +1,11 @@
+import {build} from 'esbuild';
+import assert from 'node:assert/strict';
+await build({entryPoints:['lib/image-url.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/image-url-test.mjs'});
+const {originalListingImageUrl:original}=await import('../.sites-runtime/image-url-test.mjs');
+const base='https://landthumb-phinf.pstatic.net/path/photo.JPG';
+assert.equal(original(base+'?type=CW86_H86'),base);
+assert.equal(original(base+'?type=CW86_H86&other=keep'),base+'?other=keep');
+assert.equal(original(base),base);
+assert.equal(original(base+'?type=unknown'),base+'?type=unknown');
+for(const value of ['javascript:alert(1)','https://landthumb-phinf.pstatic.net.evil.example/photo.JPG?type=CW86_H86','http://landthumb-phinf.pstatic.net/photo.JPG','https://name:password@landthumb-phinf.pstatic.net/photo.JPG'])assert.equal(original(value),'');
+console.log('PASS: only known thumbnail transform removed, same image path and other parameters preserved, original URL idempotent, untrusted URLs rejected.');

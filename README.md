@@ -4,6 +4,8 @@
 
 사용자 사이트 소스는 `mapo-home-user/`, 운영자 사이트 소스는 `mapo-home-administrator/`에 있습니다.
 
+출퇴근 경로 비교를 추가한 로컬 개발 버전은 `mapo-home-route/`에 있습니다. 관심 매물 최대 3개의 대중교통 경로를 조회하고, 시간·환승·도보 조건으로 비교하며, 선택한 경로를 타임라인으로 표시합니다. 기존 사용자·운영자 사이트와 별도 폴더로 관리합니다. 실행 방법과 ODsay URI 키 설정은 [출퇴근 비교 안내](mapo-home-route/COMMUTE.md)를 참고하세요.
+
 ## 실행
 
 Node.js 22.13 이상에서 사용자 사이트 폴더로 이동하여 `npm ci`, `npm run dev`를 실행합니다. 운영 배포에는 Sites 인증·Cloudflare D1 및 별도 연동 환경 설정이 필요합니다.

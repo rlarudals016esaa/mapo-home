@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import fs from 'node:fs';
+await build({entryPoints:['lib/catalog.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/catalog-test.mjs',plugins:[{name:'worker-test-binding',setup(b){b.onResolve({filter:/^cloudflare:workers$/},()=>({path:'worker-test-binding',namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},()=>({contents:'export const env={};'}));}}]});
+const {validateCatalog,applyCatalog}=await import('../.sites-runtime/catalog-test.mjs');
+const content={schemaVersion:1,district:'마포구',completeSnapshot:true,sourceFile:'SINGLE_20261006_130231.xlsx',sourceDate:'2026-10-06',collectedAt:'2026-10-06T04:02:31.000Z',listings:JSON.parse(fs.readFileSync('data/2026-10-06.json','utf8'))};
+const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(content)));const checksum=Buffer.from(hash).toString('hex');const value={...content,sequence:0,datasetVersion:checksum,checksum,publishedAt:content.collectedAt};assert.equal((await validateCatalog(value)).listings.length,1003);
+await assert.rejects(()=>validateCatalog({...value,checksum:'0'.repeat(64)}));await assert.rejects(()=>validateCatalog({...value,completeSnapshot:false}));await assert.rejects(()=>validateCatalog({...value,listings:[...value.listings,value.listings[0]]}));
+const state={schemaVersion:2,mode:'real',datasetId:'base',sourceFile:value.sourceFile,sourceDate:value.sourceDate,listings:value.listings.map(l=>({...l,active:true,updated:value.collectedAt,history:[{at:value.collectedAt,price:l.price,rent:l.rent}]})),rules:[],favorites:[],nickname:'',notices:[],runs:[]};
+const applied=applyCatalog(state,await validateCatalog(value));assert.equal(applied.notices.length,0);assert.equal(applyCatalog(applied,value),applied);
+const missingId=state.listings.find(l=>!l.trackable).id;const saved={...applied,favorites:[{listingId:missingId,alertsEnabled:false,savedAt:value.collectedAt}]};const newer=applyCatalog(saved,{...value,sequence:1,sourceFile:'SINGLE_20261006_140231.xlsx',datasetVersion:'1'.repeat(64)});assert.equal(newer.listings.find(l=>l.id===missingId).active,false);assert.equal(newer.favorites[0].alertsEnabled,false);console.log('PASS: checksum/schema validation, initial silence, idempotence, missing-ID favorite preservation');
