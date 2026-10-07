@@ -4,24 +4,15 @@ import {env} from "cloudflare:workers";
 import {ruleSchema,type State} from "@/lib/model";
 import {z} from "zod";
 import {baseline,migrateState} from "@/lib/baseline";
+import {synchronizedState} from "@/lib/customer-state";
+import {pushConfiguration} from "@/lib/push";
 
 const json=(v:unknown,status=200)=>Response.json(v,{status,headers:{"Cache-Control":"no-store"}});
 function db(){if(!env.DB)throw new Error("데이터 저장소가 연결되지 않았습니다.");return env.DB}
 async function read(id:string){return db().prepare("SELECT revision,payload FROM workspaces WHERE id=?").bind(id).first<{revision:number;payload:string}>()}
 const customerState=(s:State)=>{const {legacyRules,...visible}=s;return {...visible,runs:[]}};
-const delivery={ready:false,message:"운영자가 확정한 매물은 연결되어 있습니다. 기기 푸시와 매일 자동 수집은 아직 제공하지 않습니다."};
-
-async function synchronizedState(id:string){
- for(let attempt=0;attempt<3;attempt++){
-  const row=await read(id);const before=migrateState(row?JSON.parse(row.payload):null);const state=await reconcileCatalog(before);
-  if(state===before)return {state,revision:row?.revision??0};
-  const payload=JSON.stringify(state);if(new TextEncoder().encode(payload).length>1900000)throw new Error("사용자 이력 저장 용량을 확인해 주세요.");
-  const result=row?await db().prepare("UPDATE workspaces SET payload=?,revision=revision+1 WHERE id=? AND revision=?").bind(payload,id,row.revision).run():await db().prepare("INSERT OR IGNORE INTO workspaces(id,revision,payload) VALUES(?,1,?)").bind(id,payload).run();
-  if(result.meta.changes===1)return {state,revision:(row?.revision??0)+1};
- }
- throw new Error("동시 변경이 발생했습니다. 새로고침해 주세요.");
-}
 export async function GET(){try{
+  const delivery={ready:pushConfiguration().ready,message:"내 조건에서 기기 알림을 켜면 운영자가 새 자료를 반영할 때 알려드려요."};
   const catalog=await refreshCatalog();const u=await getChatGPTUser();
   if(!u)return json({state:customerState(await reconcileCatalog(baseline())),revision:0,user:null,delivery,catalog});
   const result=await synchronizedState(u.userId);
