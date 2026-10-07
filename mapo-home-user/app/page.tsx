@@ -8,6 +8,7 @@ import {Switch} from "@/components/ui/switch";
 import {Toaster} from "@/components/ui/sonner";
 import {toast} from "sonner";
 import {dongs,initial,matches,money,priceLabel,priceChange,favoriteStatus,ruleSchema,type Listing,type Rule,type State,type Notice} from "@/lib/model";
+import {ListingPhoto} from "@/components/listing-photo";
 import {ListingSourceLink} from "@/components/listing-source-link";
 import {PwaPanel} from "@/components/pwa-panel";
 import {PushPanel} from "@/components/push-panel";
@@ -77,6 +78,7 @@ export default function Home(){
   function card(l:Listing){
     const f=favoriteMap.get(l.id);
     return <article className={"listing-card "+(!l.active?"unconfirmed":"")} key={l.id}>
+      <ListingPhoto url={l.imageUrl} name={l.name}/>
       <div className="card-top"><div className="inline"><span className="type-tag">{l.deal}</span><span className="muted">{l.type}</span></div><button className={"heart-button "+(f?"is-saved":"")} aria-label={l.name+(f?" 관심 해제":" 관심 저장")} aria-pressed={!!f} disabled={busy} onClick={()=>heart(l)}><Heart size={21} fill={f?"currentColor":"none"}/></button></div>
       <p className="location"><MapPin size={14}/>마포구 {l.dong==="동 정보 없음"?"동네 정보 없음":l.dong}</p>
       <h3><button className="card-name" onClick={()=>openDetail(l.id)}>{l.name}</button></h3>
@@ -146,6 +148,7 @@ export default function Home(){
     </main>
     <Dialog open={!!detailId&&loaded} onOpenChange={v=>!v&&closeDetail()}><DialogContent className="app-dialog detail-dialog"><DialogTitle>{detail?.name??"매물을 찾을 수 없어요"}</DialogTitle><DialogDescription>{detail?"마포구 "+detail.dong+" · "+detail.type:"오래된 링크이거나 더 이상 제공되지 않는 매물일 수 있어요."}</DialogDescription>{detail&&<>
       {!detail.active&&<div className="detail-unconfirmed">확인되지 않음 · 최신 수집에서 확인되지 않았어요.</div>}
+      <ListingPhoto key={detail.id} url={detail.imageUrl} name={detail.name} detail/>
       <div className="detail-price-row"><div><span className="type-tag">{detail.deal}</span><div className="price range-price">{priceLabel(detail)}</div></div><button className={"heart-button "+(favoriteMap.has(detail.id)?"is-saved":"")} aria-label={favoriteMap.has(detail.id)?"관심 해제":"관심 저장"} aria-pressed={favoriteMap.has(detail.id)} disabled={busy} onClick={()=>heart(detail)}><Heart fill={favoriteMap.has(detail.id)?"currentColor":"none"}/></button></div>
       <Delta l={detail}/>{detail.id.startsWith("test:")?<p className="source-link-missing">테스트용 가상 매물 · 가격 알림 검증용입니다. 실제 거래할 수 없습니다.</p>:<ListingSourceLink url={detail.sourceUrl}/>}
       {favoriteMap.has(detail.id)&&<div className="favorite-controls"><span>{favoriteStatus(detail,favoriteMap.get(detail.id)!,rule)}</span><Switch aria-label="이 매물 가격 알림" checked={favoriteMap.get(detail.id)!.alertsEnabled} disabled={busy} onCheckedChange={enabled=>mutate("favorite-alert",{id:detail.id,enabled})}/></div>}
