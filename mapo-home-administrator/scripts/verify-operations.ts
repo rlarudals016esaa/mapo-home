@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {ruleSchema,initial,importSnapshot,matches,priceChange,favoriteStatus,type Listing,type Rule,type State} from '../lib/review-policy';
+import {normalizeAdmin,evaluateProfiles} from '../lib/reviews';
+import {collectedAt,duplicateGroups,qualityWarnings} from '../lib/quality';
+import {newestWithSimilarTogether} from '../lib/listing-order';
+import {baseline} from '../lib/baseline';
+import {adminInitial} from '../lib/admin';
+const r:Rule={id:'rule',deal:'월세',maxPrice:2000,maxRent:100,minArea:null,dongs:[],enabled:true};
+const room=(id:string,price=1000,rent=70):Listing=>({id,district:'마포구',dong:'망원동',name:'검토 매물',type:'원룸',deal:'월세',price,rent,area:20,floor:'2층',trackable:true,active:true,updated:'2026-10-06T00:00:00Z',history:[{at:'2026-10-06T00:00:00Z',price,rent}]});
+const s=(listings:Listing[]):State=>({...initial(),listings,rules:[r],favorites:listings.map(l=>({listingId:l.id,alertsEnabled:true,savedAt:'2026-10-06'}))});
+const run=(state:State,rows:Listing[],day=7)=>importSnapshot(state,rows,'SINGLE_20261007_130231.xlsx',`2026-10-${day}T04:02:31Z`,`2026-10-${day}`);
+let checks=0;function check(name:string,f:()=>void){f();checks++;console.log('PASS '+name)}
+check('one deal, five unique dongs, monthly required',()=>{assert(!ruleSchema.safeParse({...r,deal:'전체'}).success);assert(!ruleSchema.safeParse({...r,maxRent:null}).success);assert(!ruleSchema.safeParse({...r,dongs:['망원동','망원동']}).success);assert(!ruleSchema.safeParse({...r,dongs:['망원동','합정동','연남동','서교동','성산동','상암동']}).success)});
+check('paired price options and unknown dong',()=>{assert(!matches({...room('a'),priceOptions:[{price:1000,rent:120},{price:3000,rent:60}]},r));assert(!matches({...room('a'),dong:'동 정보 없음'},{...r,dongs:['망원동']}))});
+check('price drop priorities, mixed change, rises excluded',()=>{assert.equal(priceChange(room('a',900,60),room('a'))?.priority,1);assert.equal(priceChange(room('a',1000,60),room('a'))?.priority,2);assert.equal(priceChange(room('a',1100,60),room('a'))?.kind,'가격 조건 변경');assert.equal(priceChange(room('a',1100,80),room('a')),null)});
+check('only favorites receive price events',()=>{const state=s([room('a')]);state.listings.push(room('b'));assert.equal(run(state,[room('a',900),room('b',900)]).notices.length,1)});
+check('exit and reentry once, reentry beats price drop',()=>{const out=run(s([room('a')]),[room('a',3000,50)]);assert.equal(out.notices.length,0);const back=run(out,[room('a',1900,40)],8);assert.equal(back.notices.length,1);assert.equal(back.notices[0].kind,'조건 재진입');assert.equal(run(back,[room('a',1900,40)],9).notices.length,1)});
+check('manual off stays off',()=>{const state=s([room('a',3000)]);state.favorites[0].alertsEnabled=false;assert.equal(run(state,[room('a')]).notices.length,0)});
+check('new matches grouped; first load silent',()=>{assert.equal(run({...initial(),rules:[r]},[room('a')]).notices.length,0);const n=run(s([room('a')]),[room('a'),room('b'),room('c')]).notices;assert.equal(n.length,1);assert.deepEqual(n[0].listingIds,['b','c'])});
+check('missing favorites retained; reappearance alone silent',()=>{const missing=run(s([room('a'),{...room('u'),trackable:false}]),[room('b',9000)]);assert.equal(missing.listings.find(l=>l.id==='u')?.active,false);assert.equal(run(missing,[room('a'),room('b',9000)],8).notices.length,0);assert.equal(favoriteStatus(missing.listings.find(l=>l.id==='a')!,missing.favorites[0],r),'확인되지 않음')});
+check('grouped prices excluded from price alerts',()=>{const g={...room('g'),priceOptions:[{price:1000,rent:70},{price:2000,rent:50}]};assert.equal(priceChange({...g,rent:30},g),null)});
+check('legacy state and pending survive normalization',()=>{const old=adminInitial();old.rules=[{id:'old',name:'legacy',dong:'전체',deal:'전체',type:'전체',maxPrice:100,maxRent:20,minArea:0,enabled:true,newMatch:true,priceChange:true}];const next=normalizeAdmin(JSON.parse(JSON.stringify(old)));assert.deepEqual(next.rules,old.rules);assert.deepEqual(next.notices,old.notices);assert.equal(next.profiles?.length,0)});
+check('local profile evaluation stable id, internal only',()=>{const state=normalizeAdmin(adminInitial());state.listings=[room('a')];state.profiles=[{id:'p',alias:'검토',nickname:'',rule:r,favorites:s([room('a')]).favorites}];const events=evaluateProfiles(state,[room('a',900)],'file','2026-10-07T00:00:00Z','2026-10-07','batch');const replay=evaluateProfiles(state,[room('a',900)],'file','2026-10-07T01:00:00Z','2026-10-07','batch');assert.equal(events[0].id,replay[0].id);assert.equal(events[0].delivery,'internal_only')});
+check('source time ordering and malformed dates',()=>{assert(collectedAt('SINGLE_20261006_114510.xlsx')<collectedAt('SINGLE_20261006_130231.xlsx'));assert.throws(()=>collectedAt('SINGLE_20261006_246001.xlsx'));assert.throws(()=>collectedAt('SINGLE_20260230_120000.xlsx'))});
+check('collection loss warnings',()=>{assert.equal(qualityWarnings([room('a'),{...room('b'),type:'오피스텔'}],[room('a')]).length,2)});
+check('baseline provenance, duplicates, order preserve rows',()=>{const b=baseline();assert.equal(b.listings.length,1003);assert.equal(b.listings.filter(l=>l.sourceUrl).length,965);assert(b.listings.every(l=>l.sourceSheet==='Sheet1'));assert.equal(duplicateGroups(b.listings).length,66);assert.equal(duplicateGroups(b.listings,true).length,20);const sorted=newestWithSimilarTogether(b.listings);assert.equal(new Set(sorted.map(l=>l.id)).size,1003);assert(sorted[0].confirmedAt?.includes('2026.10.06'))});
+console.log(checks+' operation checks passed');

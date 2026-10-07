@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {reviewExclusions} from '../lib/import-exclusions';
+import type {ImportResult} from '../lib/standard-import';
+const result:ImportResult={rows:[],standardRows:[],total:3,sourceDate:'2026-10-07',format:'표준 MAPO-1',issues:[{row:27,name:'매물',field:'가격원문',message:'금액 확인 필요',value:'오류'},{row:27,name:'매물',field:'월세',message:'금액 확인 필요',value:''},{row:28,name:'다른 매물',field:'면적',message:'면적 확인 필요',value:''}]};
+assert.equal(reviewExclusions(result,[]).unresolved.length,3);
+const selected=reviewExclusions(result,[27]);assert.equal(selected.exclusions.length,1);assert.equal(selected.exclusions[0].reason,'금액 확인 필요');assert.equal(selected.unresolved.length,1);
+assert.equal(reviewExclusions(result,[27,28]).unresolved.length,0);
+assert.throws(()=>reviewExclusions(result,[27,27]),/중복/);
+assert.throws(()=>reviewExclusions(result,[2]),/확인 필요/);
+assert.throws(()=>reviewExclusions(result,[27.5]),/확인 필요/);
+console.log('Explicit exclusions: unique rows, pending unresolved rows, stable reason and invalid-row rejection passed.');

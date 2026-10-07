@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import raw from '../data/2026-10-06.json';
+import {listingSchema,matches,type Listing,type Rule} from '../lib/model';
+import {collectionResults,unverifiedForRule} from '../lib/filters';
+const rows:Listing[]=raw.map(l=>({...listingSchema.parse(l),active:true,updated:'2026-10-06',history:[]}));
+const filter={type:'오피스텔',deal:'월세',dong:'합정동',status:'전체',query:''};
+const result=collectionResults(rows,filter);assert.equal(result.matched.length,0);assert.equal(result.unverified.length,328);assert.ok(result.unverified.every(l=>l.dong==='동 정보 없음'));
+assert.equal(collectionResults(rows,{...filter,dong:'전체'}).matched.length,328);
+assert.equal(collectionResults(rows,{...filter,type:'원룸'}).matched.length,34);
+assert.equal(collectionResults(rows,{...filter,status:'미수집'}).unverified.length,0);
+assert.equal(collectionResults(rows,{...filter,dong:'동 정보 없음'}).unverified.length,0);
+assert.equal(collectionResults(rows,{...filter,query:'does not exist'}).unverified.length,0);
+const rule:Rule={id:'regression',name:'합정 월세',dong:'합정동',deal:'월세',type:'오피스텔',maxPrice:1000,maxRent:100,minArea:20,enabled:true,newMatch:true,priceChange:true};
+const candidates=unverifiedForRule(rows,rule);assert.ok(candidates.length>0);assert.ok(candidates.every(l=>!matches(l,rule)&&matches(l,{...rule,dong:'전체'})));assert.equal(unverifiedForRule(rows,{...rule,dong:'전체'}).length,0);
+const known={...result.unverified[0],dong:'합정동'};assert.equal(collectionResults([known],filter).matched.length,1);assert.equal(collectionResults([known],filter).unverified.length,0);
+console.log(JSON.stringify({passed:true,officetelMonthly:328,verifiedHapjeong:0,unverified:328,hapjeongOneRoomMonthly:34,ruleCandidates:candidates.length,unknownDoesNotTriggerDongAlerts:true}));
