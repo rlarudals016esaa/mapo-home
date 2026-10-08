@@ -2,6 +2,12 @@
 
 마포구 원룸·오피스텔 전월세를 찾는 사용자를 위한 마포홈입니다.
 
+## 바로가기
+
+- [사용자 사이트 — 마포홈](https://mapo-home-watch.sooyeon-jun-0389.chatgpt.site/)
+- [운영자 사이트 — 마포홈 운영센터](https://mapo-home-admin.sooyeon-jun-0389.chatgpt.site/)
+- [발표자료 PDF](docs/mapo-home-redesigned.pptx.pdf)
+
 사용자 사이트 소스는 `mapo-home-user/`, 운영자 사이트 소스는 `mapo-home-administrator/`에 있습니다.
 
 출퇴근 경로 비교를 추가한 버전은 `mapo-home-route/`에 있습니다. 관심 매물 최대 3개의 대중교통 경로를 조회하고, 시간·환승·도보 조건으로 비교하며, 목적지 아래에 작은 경로 요약 카드를 표시합니다. 상세 경로를 펼치면 타임라인과 다른 경로를 볼 수 있습니다. 기존 사용자·운영자 사이트와 별도 폴더로 관리합니다. 실행 방법과 ODsay URI 키 설정은 [출퇴근 비교 안내](mapo-home-route/COMMUTE.md)를 참고하세요.
